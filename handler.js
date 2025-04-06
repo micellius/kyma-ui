@@ -6,17 +6,19 @@ const fs = require('fs');
 
 module.exports = {
     main: async function(event) {
-        const { request: req, response: res } = event.extensions;
-        
-        if (req.method.toUpperCase() !== 'POST') {
-            return res.status(405);
-        }
-
-        if (req.headers.authorization !== `Bearer ${process.env.TOKEN}`) {
-            return res.status(401);
-        }
-
         try {
+            const { request: req, response: res } = event.extensions;
+        
+            if (req.method.toUpperCase() !== 'POST') {
+                res.status(405);
+                return;
+            }
+    
+            if (req.headers.authorization !== `Bearer ${process.env.TOKEN}`) {
+                res.status(401);
+                return; 
+            }
+
             const content_endpoint = fs.readFileSync(join(secretPath, 'content_endpoint'), 'utf8');
             const uaa = fs.readFileSync(join(secretPath, 'uaa'), 'utf8');
             const serviceKey = `{"content_endpoint":"${content_endpoint}","uaa":${uaa}}`;
