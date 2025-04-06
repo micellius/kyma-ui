@@ -1,0 +1,8 @@
+{
+    "sap.app": {
+        "id": "kymaui",
+        "applicationVersion": {
+            "version": "0.0.1"
+        }
+    }
+}
