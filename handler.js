@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { readFile, writeFile, unlink } from 'node:fs/promises';
+import { readFile, writeFile, unlink, readdir } from 'node:fs/promises';
 import { Writable } from 'node:stream';
 import { run } from '@sap/appfront-cli';
 
@@ -40,6 +40,8 @@ const afctl = async (...args) => {
 export async function main(event, context) {
     const out = [];
     try {
+        return (await readdir(process.cwd())).toString();
+
         const { request: req, response: res } = event.extensions;
     
         if (req.method.toUpperCase() !== 'POST') {
