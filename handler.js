@@ -40,7 +40,8 @@ const afctl = async (...args) => {
     return stdout.toJSON();
 };
 
-export async function main(event) {
+export async function main(event, context) {
+    return 'main: OK';
     const out = [];
     try {
         const { request: req, response: res } = event.extensions;
@@ -71,7 +72,6 @@ export async function main(event) {
 
         return out.join('\n');
     } catch(err) {
-        res.status(500);
         out.push(err.toString());
         return out.join('\n');
     }
