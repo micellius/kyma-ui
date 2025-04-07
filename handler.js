@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, unlink } from 'node:fs/promises';
 import { Writable } from 'node:stream';
 import { run } from '@sap/appfront-cli';
 
@@ -57,13 +57,12 @@ export async function main(event, context) {
         
         await writeFile(serviceKeyPath, serviceKey);
 
-        out.push(`afctl login kyma --service-key ${serviceKeyPath}`);
+        out.push(`$> afctl login kyma --service-key ${serviceKeyPath}`);
         out.push(await afctl('login', 'kyma', '--service-key', serviceKeyPath) || 'OK');
         
-        await unlinkSync(serviceKeyPath);
-        return `main: after key deletion - OK (revision: ${process.env.REVISION})`;
+        await unlink(serviceKeyPath);
 
-        out.push('afctl push webapp -l');
+        out.push('$> afctl push webapp -l');
         out.push(await afctl('push', 'webapp', '-l'));
 
         return out.join('\n');
