@@ -6,6 +6,7 @@ const fs = require('fs');
 
 module.exports = {
     main: async function(event) {
+        const out = [];
         try {
             const { request: req, response: res } = event.extensions;
         
@@ -22,27 +23,25 @@ module.exports = {
             const content_endpoint = fs.readFileSync(join(secretPath, 'content_endpoint'), 'utf8');
             const uaa = fs.readFileSync(join(secretPath, 'uaa'), 'utf8');
             const serviceKey = `{"content_endpoint":"${content_endpoint}","uaa":${uaa}}`;
-            const out = ['<html><body><pre>'];
 
-            fs.writeFileSync('service-key.json', serviceKey);
+            fs.writeFileSync('/tmp/service-key.json', serviceKey);
 
             const login = afctl('login', 'kyma', '--service-key', 'service-key.json');
             out.push('afctl login kyma --service-key \'{...}\'');
             out.push( `stderr: ${ login.stderr.toString() }` );
             out.push( `stdout: ${ login.stdout.toString() }` );
 
-            fs.unlinkSync('service-key.json');
+            fs.unlinkSync('/tmp/service-key.json');
 
             const push = afctl('push', 'webapp', '-l');
             out.push('afctl push webapp -l');
             out.push(`stderr: ${ push.stderr.toString() }`);
             out.push(`stdout: ${ push.stdout.toString() }`);
 
-            out.push('</pre></body></html>');
-
             return out.join('\n');
         } catch(err) {
-            return err.toString();
+            out.push(err.toString());
+            return out.join('\n');
         }
     }
 };
