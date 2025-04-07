@@ -27,12 +27,9 @@ const afctl = async (...args) => {
     const stdout = writable();
     const stderr = writable();
     const code = await run({
-        env: process.env,
         args: [...args, '-o', 'json'],
-        stdin: process.stdin,
         stdout: stdout,
-        stderr: stderr,
-        fs
+        stderr: stderr
     });
     if (code !== 0) {
         throw new Error('Failed to run: ' + args.join(' ') + '\n' + stderr.toString());
