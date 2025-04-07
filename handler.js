@@ -41,7 +41,6 @@ const afctl = async (...args) => {
 };
 
 export async function main(event, context) {
-    return 'main: OK';
     const out = [];
     try {
         const { request: req, response: res } = event.extensions;
@@ -55,7 +54,7 @@ export async function main(event, context) {
             res.status(401);
             return; 
         }
-
+        return 'main: before reading secret - OK';
         const content_endpoint = await readFile(join(secretPath, 'content_endpoint'), 'utf8');
         const uaa = await readFile(join(secretPath, 'uaa'), 'utf8');
         const serviceKey = `{"content_endpoint":"${content_endpoint}","uaa":${uaa}}`;
