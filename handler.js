@@ -60,10 +60,9 @@ export async function main(event, context) {
         
         await writeFile(serviceKeyPath, serviceKey);
 
-        return `main: OK (revision: ${process.env.REVISION})`;
-
         out.push(`afctl login kyma --service-key ${serviceKeyPath}`);
         out.push(await afctl('login', 'kyma', '--service-key', serviceKeyPath) || 'OK');
+        return `main: OK (revision: ${process.env.REVISION})`;
 
         await unlinkSync(serviceKeyPath);
 
