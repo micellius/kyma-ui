@@ -1,6 +1,7 @@
 {
     "name": "kyma-ui",
     "version": "1.0.0",
+    "type": "module",
     "dependencies": {
         "@sap/appfront-cli": "^1.6.0"
     }

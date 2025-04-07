@@ -1,47 +1,78 @@
-const { spawnSync } = require('child_process');
-const afctl = (...args) => spawnSync('node', ['node_modules/@sap/appfront-cli/lib/index.js', ...args]);
+import { join } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
+import { Writable } from 'node:stream';
+import { run } from '@sap/appfront-cli';
+
 const secretPath = '/usr/src/app/secret/app-front';
-const { join } = require('path');
-const fs = require('fs');
+const serviceKeyPath = '/tmp/service-key.json';
 
-module.exports = {
-    main: async function(event) {
-        const out = [];
-        try {
-            const { request: req, response: res } = event.extensions;
-        
-            if (req.method.toUpperCase() !== 'POST') {
-                res.status(405);
-                return;
-            }
+const writable = () => {
+    const writable = new Writable();
+    writable._write = (chunk, _, callback) => {
+        writable.calls.push(Buffer.from(chunk).toString('utf8'));
+        callback();
+    };
+    writable.toString = () => {
+        return writable.calls.join('').trim();
+    };
+    writable.toJSON = () => {
+        return JSON.parse(writable.toString() || 'null');
+    };
+    writable.isTTY = false;
+    writable.calls = [];
+    return writable;
+};
+
+const afctl = async (...args) => {
+    const stdout = writable();
+    const stderr = writable();
+    const code = await run({
+        env: process.env,
+        args: [...args, '-o', 'json'],
+        stdin: process.stdin,
+        stdout: stdout,
+        stderr: stderr,
+        fs
+    });
+    if (code !== 0) {
+        throw new Error('Failed to run: ' + args.join(' ') + '\n' + stderr.toString());
+    }
+    return stdout.toJSON();
+};
+
+export async function main(event) {
+    const out = [];
+    try {
+        const { request: req, response: res } = event.extensions;
     
-            if (req.headers.authorization !== `Bearer ${process.env.TOKEN}`) {
-                res.status(401);
-                return; 
-            }
-
-            const content_endpoint = fs.readFileSync(join(secretPath, 'content_endpoint'), 'utf8');
-            const uaa = fs.readFileSync(join(secretPath, 'uaa'), 'utf8');
-            const serviceKey = `{"content_endpoint":"${content_endpoint}","uaa":${uaa}}`;
-
-            fs.writeFileSync('/tmp/service-key.json', serviceKey);
-
-            const login = afctl('login', 'kyma', '--service-key', 'service-key.json');
-            out.push('afctl login kyma --service-key \'{...}\'');
-            out.push( `stderr: ${ login.stderr.toString() }` );
-            out.push( `stdout: ${ login.stdout.toString() }` );
-
-            fs.unlinkSync('/tmp/service-key.json');
-
-            const push = afctl('push', 'webapp', '-l');
-            out.push('afctl push webapp -l');
-            out.push(`stderr: ${ push.stderr.toString() }`);
-            out.push(`stdout: ${ push.stdout.toString() }`);
-
-            return out.join('\n');
-        } catch(err) {
-            out.push(err.toString());
-            return out.join('\n');
+        if (req.method.toUpperCase() !== 'POST') {
+            res.status(405);
+            return;
         }
+
+        if (req.headers.authorization !== `Bearer ${process.env.TOKEN}`) {
+            res.status(401);
+            return; 
+        }
+
+        const content_endpoint = await readFile(join(secretPath, 'content_endpoint'), 'utf8');
+        const uaa = await readFile(join(secretPath, 'uaa'), 'utf8');
+        const serviceKey = `{"content_endpoint":"${content_endpoint}","uaa":${uaa}}`;
+
+        await writeFile(serviceKeyPath, serviceKey);
+
+        out.push(`afctl login kyma --service-key ${serviceKeyPath}`);
+        out.push(await afctl('login', 'kyma', '--service-key', serviceKeyPath) || 'OK');
+
+        await unlinkSync(serviceKeyPath);
+
+        out.push('afctl push webapp -l');
+        out.push(await afctl('push', 'webapp', '-l'));
+
+        return out.join('\n');
+    } catch(err) {
+        res.status(500);
+        out.push(err.toString());
+        return out.join('\n');
     }
 };
