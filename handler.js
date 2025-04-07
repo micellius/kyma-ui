@@ -40,10 +40,6 @@ const afctl = async (...args) => {
 export async function main(event, context) {
     const out = [];
     try {
-        return (await readdir(join(process.cwd(), 'function'), {withFileTypes:true})).map(
-            f => (f.isDirectory() ? 'd ' : 'f ') + f.name
-        ).join('\n');
-
         const { request: req, response: res } = event.extensions;
     
         if (req.method.toUpperCase() !== 'POST') {
@@ -66,8 +62,8 @@ export async function main(event, context) {
         
         await unlink(serviceKeyPath);
 
-        out.push('$> afctl push webapp -l');
-        out.push(await afctl('push', 'webapp', '-l'));
+        out.push('$> afctl push function/webapp -l');
+        out.push(await afctl('push', 'function/webapp', '-l'));
 
         return out.join('\n');
     } catch(err) {
