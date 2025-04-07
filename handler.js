@@ -58,9 +58,9 @@ export async function main(event, context) {
         const uaa = await readFile(join(secretPath, 'uaa'), 'utf8');
         const serviceKey = `{"content_endpoint":"${content_endpoint}","uaa":${uaa}}`;
         
-        return 'main: after reading secret - OK';
-
         await writeFile(serviceKeyPath, serviceKey);
+        
+        return 'main: after writing key - OK';
 
         out.push(`afctl login kyma --service-key ${serviceKeyPath}`);
         out.push(await afctl('login', 'kyma', '--service-key', serviceKeyPath) || 'OK');
