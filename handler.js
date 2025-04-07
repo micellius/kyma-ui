@@ -63,7 +63,7 @@ export async function main(event, context) {
         await unlink(serviceKeyPath);
 
         out.push('$> afctl push function/webapp -l');
-        out.push(await afctl('push', 'function/webapp', '-l'));
+        out.push(JSON.stringify(await afctl('push', 'function/webapp', '-l'), null, 4));
 
         return out.join('\n');
     } catch(err) {
