@@ -40,7 +40,9 @@ const afctl = async (...args) => {
 export async function main(event, context) {
     const out = [];
     try {
-        return (await readdir(process.cwd())).toString();
+        return (await readdir(process.cwd(), {withFileTypes:true})).map(
+            f => (f.isDirectory() ? 'd ' : 'f ') + f.name
+        ).join('\n');
 
         const { request: req, response: res } = event.extensions;
     
