@@ -57,6 +57,7 @@ export async function main(event, context) {
         const content_endpoint = await readFile(join(secretPath, 'content_endpoint'), 'utf8');
         const uaa = await readFile(join(secretPath, 'uaa'), 'utf8');
         const serviceKey = `{"content_endpoint":"${content_endpoint}","uaa":${uaa}}`;
+        
         return 'main: after reading secret - OK';
 
         await writeFile(serviceKeyPath, serviceKey);
